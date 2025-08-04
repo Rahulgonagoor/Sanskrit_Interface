@@ -3,7 +3,7 @@ import re
 
 # Dynamically resolve the data file path relative to this script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SHABDA_FILE_PATH = os.path.join(BASE_DIR, "shabda_combined.txt")
+SHABDA_FILE_PATH = os.path.join(BASE_DIR,"shabda_combined.txt")
 
 
 def load_shabdas(file_path):
