@@ -1,4 +1,10 @@
+import os
 import re
+
+# Dynamically resolve the data file path relative to this script
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SHABDA_FILE_PATH = os.path.join(BASE_DIR, "shabda_combined.txt")
+
 
 def load_shabdas(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -97,7 +103,7 @@ def search_shabda(shabdas, word):
 
 
 def get_vibhakti_details(word):
-    file_path = "/Users/rahulmariyappagoudar/Desktop/grammer/shabda_combined.txt"
+    file_path = SHABDA_FILE_PATH
     try:
         shabdas = load_shabdas(file_path)
         result = search_shabda(shabdas, word)
@@ -119,7 +125,7 @@ def get_vibhakti_details(word):
 
 
 def get_raw_entry_for_word(word):
-    file_path = "/Users/rahulmariyappagoudar/Desktop/grammer/shabda_combined.txt"
+    file_path = SHABDA_FILE_PATH
     try:
         shabdas = load_shabdas(file_path)
         for entry in shabdas:
@@ -132,7 +138,7 @@ def get_raw_entry_for_word(word):
 
 
 def main():
-    file_path = "/Users/rahulmariyappagoudar/Desktop/grammer/shabda_combined.txt"
+    file_path = SHABDA_FILE_PATH
     print("🔄 Loading shabdas from file...")
 
     try:
