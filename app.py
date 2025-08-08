@@ -1,50 +1,60 @@
 import streamlit as st
+import base64
+from pathlib import Path
 from sentence_analyzer_with_meaning import clean_and_split, analyze_word
 
 st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
+# ==== Helper to load image as base64 ====
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+# Paths to images
+assets_path = Path(__file__).parent / "assets"
+chip_b64 = get_base64_image(assets_path / "logo.png")
+mandala_b64 = get_base64_image(assets_path / "mandala.png")
+
 # ===== Rotating Mandala Logo =====
 st.markdown(
-    """
+    f"""
     <style>
-    .logo-wrapper {
+    .logo-wrapper {{
         position: relative;
-        width: 250px; /* Adjust overall size */
+        width: 250px;
         margin: auto;
-    }
-
-    .chip {
+    }}
+    .chip {{
         width: 100%;
         display: block;
-    }
-
-    .mandala {
+    }}
+    .mandala {{
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 70%; /* Size relative to chip */
+        width: 70%;
         transform: translate(-50%, -50%);
         animation: spin 10s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: translate(-50%, -50%) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
+    }}
+    @keyframes spin {{
+        0% {{ transform: translate(-50%, -50%) rotate(0deg); }}
+        100% {{ transform: translate(-50%, -50%) rotate(360deg); }}
+    }}
     </style>
 
     <div class="logo-wrapper">
-        <img class="chip" src="assets/logo.png">
-        <img class="mandala" src="assets/mandala.png">
+        <img class="chip" src="data:image/png;base64,{chip_b64}">
+        <img class="mandala" src="data:image/png;base64,{mandala_b64}">
     </div>
     """,
     unsafe_allow_html=True
 )
 
+# ===== Title and description =====
 st.title("🧠 Sanskrit Sentence Analyzer with Meanings")
 st.markdown("Enter a Sanskrit sentence in **Devanagari script**, and view noun/verb analysis with kāraka & meaning details.")
 
-# Input field
+# ===== Input field =====
 sentence = st.text_input("🔠 Enter Sanskrit sentence (Devanagari):")
 
 if sentence:
@@ -82,7 +92,6 @@ if sentence:
             else:
                 st.warning("🛑 No grammatical info found.")
 
-            # Meanings
             meanings = result.get("meanings", {})
             if meanings:
                 st.subheader("📚 Meanings")
