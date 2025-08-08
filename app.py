@@ -10,41 +10,15 @@ def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-# Paths to images
+# Path to assets
 assets_path = Path(__file__).parent / "assets"
-chip_b64 = get_base64_image(assets_path / "logo.png")
-mandala_b64 = get_base64_image(assets_path / "mandala.png")
+chip_b64 = get_base64_image(assets_path / "logo.png")  # Only the logo, no mandala
 
-# ===== Rotating Mandala Logo =====
+# ===== Static Logo =====
 st.markdown(
     f"""
-    <style>
-    .logo-wrapper {{
-        position: relative;
-        width: 250px;
-        margin: auto;
-    }}
-    .chip {{
-        width: 100%;
-        display: block;
-    }}
-    .mandala {{
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 70%;
-        transform: translate(-50%, -50%);
-        animation: spin 10s linear infinite;
-    }}
-    @keyframes spin {{
-        0% {{ transform: translate(-50%, -50%) rotate(0deg); }}
-        100% {{ transform: translate(-50%, -50%) rotate(360deg); }}
-    }}
-    </style>
-
-    <div class="logo-wrapper">
-        <img class="chip" src="data:image/png;base64,{chip_b64}">
-        <img class="mandala" src="data:image/png;base64,{mandala_b64}">
+    <div style="text-align: center; padding-top: 20px; padding-bottom: 10px;">
+        <img src="data:image/png;base64,{chip_b64}" width="200">
     </div>
     """,
     unsafe_allow_html=True
