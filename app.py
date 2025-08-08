@@ -3,6 +3,44 @@ from sentence_analyzer_with_meaning import clean_and_split, analyze_word
 
 st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
+# ===== Rotating Mandala Logo =====
+st.markdown(
+    """
+    <style>
+    .logo-wrapper {
+        position: relative;
+        width: 250px; /* Adjust overall size */
+        margin: auto;
+    }
+
+    .chip {
+        width: 100%;
+        display: block;
+    }
+
+    .mandala {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 70%; /* Size relative to chip */
+        transform: translate(-50%, -50%);
+        animation: spin 10s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    </style>
+
+    <div class="logo-wrapper">
+        <img class="chip" src="assets/logo.png">
+        <img class="mandala" src="assets/mandala.png">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title("🧠 Sanskrit Sentence Analyzer with Meanings")
 st.markdown("Enter a Sanskrit sentence in **Devanagari script**, and view noun/verb analysis with kāraka & meaning details.")
 
@@ -51,4 +89,3 @@ if sentence:
                 for key, value in meanings.items():
                     with st.expander(f"{key} Meaning"):
                         st.write(value)
-
