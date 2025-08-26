@@ -7,44 +7,53 @@ from sentence_analyzer_with_meaning import clean_and_split, analyze_word
 # ================= Page Config =================
 st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
-# ================= Load Credentials from Secrets =================
+# ================= Load secrets =================
 USERNAME = st.secrets["USERNAME"]
 PASSWORD = st.secrets["PASSWORD"]
 
+# Credentials dictionary for authenticator
 credentials = {
     "usernames": {
         USERNAME: {
-            "email": f"{USERNAME}@example.com",
             "name": USERNAME,
-            "password": PASSWORD,  # plaintext for now; can hash later
+            "password": PASSWORD  # plaintext for now, you can hash later
         }
     }
 }
 
+# Cookie config
 cookie_name = "sanskrit_analyzer"
-cookie_key = "random_secret_key"
-cookie_expiry = 30
+cookie_key = "some_random_secret_key"
+cookie_expiry = 30  # days
 
+# ================= Init Authenticator =================
 authenticator = stauth.Authenticate(
-    credentials,
-    cookie_name,
-    cookie_key,
-    cookie_expiry,
+    credentials=credentials,
+    cookie_name=cookie_name,
+    key=cookie_key,
+    expiry_days=cookie_expiry
 )
 
 # ================= Login =================
-name, authentication_status, username = authenticator.login("Login", location="main")
+# New API: just call login(location=...)
+authenticator.login(location="main")
 
+# Retrieve login info from session_state
+name = st.session_state.get("name")
+authentication_status = st.session_state.get("authentication_status")
+username = st.session_state.get("username")
+
+# ================= Auth Flow =================
 if authentication_status is False:
     st.error("❌ Username/Password is incorrect")
 elif authentication_status is None:
     st.warning("⚠️ Please enter your username and password")
 elif authentication_status:
-    # Logged in
+    # Logged in successfully
     authenticator.logout("Logout", "sidebar")
     st.success(f"✅ Welcome {name or ''}!")
 
-    # ================= Helper to load image as base64 =================
+    # ================= Helper to load image =================
     def get_base64_image(image_path: Path) -> str:
         try:
             with open(image_path, "rb") as img_file:
@@ -52,7 +61,7 @@ elif authentication_status:
         except FileNotFoundError:
             return ""
 
-    # ================= Load logo =================
+    # ================= Logo =================
     assets_path = Path(__file__).parent / "assets"
     logo_path = assets_path / "logo.png"
     chip_b64 = get_base64_image(logo_path)
@@ -67,7 +76,7 @@ elif authentication_status:
             unsafe_allow_html=True
         )
 
-    # ================= Title and description =================
+    # ================= Title =================
     st.title("🧠 Sanskrit Sentence Analyzer with Meanings")
     st.markdown(
         "Enter a Sanskrit sentence in **Devanagari script**, and view noun/verb analysis with kāraka & meaning details."
@@ -89,30 +98,30 @@ elif authentication_status:
 
             with st.expander(f"🔍 {result['word']} — {result['type']}"):
                 if result["type"] == "नामपद (Noun)":
-                    st.write(f"**नामपद**: {result.get('naamapada', '-')}")
-                    st.write(f"**लिङ्गः**: {result.get('linga', '-')}")
-                    st.write(f"**विभक्तिः**: {result.get('vibhakti', '-')}")
-                    st.write(f"**वचनम्**: {result.get('vachana', '-')}")
-                    st.write(f"**कारकः**: {result.get('karaka', '-')}")
+                    st.write(f"**नामपद**: {result['naamapada']}")
+                    st.write(f"**लिङ्गः**: {result['linga']}")
+                    st.write(f"**विभक्तिः**: {result['vibhakti']}")
+                    st.write(f"**वचनम्**: {result['vachana']}")
+                    st.write(f"**कारकः**: {result['karaka']}")
                     if result.get("artha"):
                         st.write(f"**अर्थः**: {result['artha']}")
                     if result.get("apadana_sutra"):
                         st.info(f"📜 **सूत्रम्**: {result['apadana_sutra']}")
 
                 elif result["type"] == "धातु (Verb)":
-                    st.write(f"**धातुः**: {result.get('dhatu', '-')}")
-                    st.write(f"**अर्थः**: {result.get('arthah', '-')}")
-                    st.write(f"**लकारः**: {result.get('lakaara', '-')}")
-                    st.write(f"**पुरुषः**: {result.get('purusha', '-')}")
-                    st.write(f"**वचनम्**: {result.get('vachana', '-')}")
-                    st.write(f"**गणः**: {result.get('ganah', '-')}")
+                    st.write(f"**धातुः**: {result['dhatu']}")
+                    st.write(f"**अर्थः**: {result['arthah']}")
+                    st.write(f"**लकारः**: {result['lakaara']}")
+                    st.write(f"**पुरुषः**: {result['purusha']}")
+                    st.write(f"**वचनम्**: {result['vachana']}")
+                    st.write(f"**गणः**: {result['ganah']}")
                     if result.get("karaka_sutra"):
                         st.info(f"📜 **Kāraka Sūtra**: {result['karaka_sutra']}")
 
                 else:
                     st.warning("🛑 No grammatical info found.")
 
-                # ===== Meanings =====
+                # ================= Meanings =================
                 meanings = result.get("meanings", {})
                 if meanings:
                     st.subheader("📚 Meanings")
