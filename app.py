@@ -1,72 +1,50 @@
 import streamlit as st
 import base64
 from pathlib import Path
-import yaml
-from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
-
 from sentence_analyzer_with_meaning import clean_and_split, analyze_word
 
-# ================= Page Config (must be first Streamlit call) =================
+# ================= Page Config =================
 st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
-# ================= Load Config (supports user.yml OR users.yaml) ==============
-config = None
-repo_root = Path(__file__).parent
+# ================= Load Credentials from Streamlit Secrets =================
+# Make sure you added USERNAME and PASSWORD in Streamlit Secrets
+credentials = {
+    "usernames": {
+        st.secrets["USERNAME"]: {
+            "email": st.secrets["USERNAME"] + "@example.com",
+            "name": st.secrets["USERNAME"].capitalize(),
+            "password": st.secrets["PASSWORD"]  # Can be hashed later
+        }
+    }
+}
 
-for fname in ("user.yml", "users.yaml"):
-    user_file = repo_root / fname
-    if user_file.exists():
-        with open(user_file, "r", encoding="utf-8") as f:
-            config = yaml.load(f, Loader=SafeLoader)
-            break
+# Cookie settings
+cookie_name = "sanskrit_analyzer"
+cookie_key = "random_key_12345"  # Change to a random secret string
+cookie_expiry_days = 30
 
-if not config:
-    st.error("⚠️ Could not find `user.yml` or `users.yaml` in the project root.")
-    st.stop()
-
-# Provide safe defaults if cookie block missing
-cookie_cfg = config.get("cookie", {})
-cookie_name = cookie_cfg.get("name", "sanskrit_cookie")
-cookie_key = cookie_cfg.get("key", "random_key")
-cookie_expiry = cookie_cfg.get("expiry_days", 30)
-
-# ================= Init Authenticator ========================================
+# ================= Init Authenticator =================
 authenticator = stauth.Authenticate(
-    credentials=config["credentials"],
-    cookie_name=cookie_name,
-    cookie_key=cookie_key,
-    cookie_expiry_days=cookie_expiry
+    credentials,
+    cookie_name,
+    cookie_key,
+    cookie_expiry_days
 )
 
-# ================= Login ======================================================
-name = None
-authentication_status = None
-username = None
+# ================= Login =================
+name, authentication_status, username = authenticator.login("Login", location="main")
 
-try:
-    # Old API: returns tuple
-    name, authentication_status, username = authenticator.login("Login", location="main")
-except TypeError:
-    # New API: use session_state
-    authenticator.login(location="main")
-    name = st.session_state.get("name")
-    authentication_status = st.session_state.get("authentication_status")
-    username = st.session_state.get("username")
-
-# ================= Auth Flow ==================================================
 if authentication_status is False:
     st.error("❌ Username/Password is incorrect")
-
 elif authentication_status is None:
     st.warning("⚠️ Please enter your username and password")
-
 elif authentication_status:
     # Logged in
     authenticator.logout("Logout", "sidebar")
     st.success(f"✅ Welcome {name or ''}!")
 
-    # ==== Helper to load image as base64 ====
+    # ================= Helper to load image =================
     def get_base64_image(image_path: Path) -> str:
         try:
             with open(image_path, "rb") as img_file:
@@ -75,11 +53,11 @@ elif authentication_status:
             return ""
 
     # Path to assets / logo
-    assets_path = repo_root / "assets"
+    assets_path = Path(__file__).parent / "assets"
     logo_path = assets_path / "logo.png"
     chip_b64 = get_base64_image(logo_path)
 
-    # ===== Static Logo (only if found) =====
+    # ===== Display Logo =====
     if chip_b64:
         st.markdown(
             f"""
