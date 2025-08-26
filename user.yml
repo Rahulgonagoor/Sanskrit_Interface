@@ -1,0 +1,16 @@
+credentials:
+  usernames:
+    rahul:
+      email: rahul@example.com
+      name: Rahul
+      password: abc123  # will hash later
+
+cookie:
+  name: sanskrit_analyzer
+  key: some_random_secret_key
+  expiry_days: 30
+
+preauthorized:
+  emails:
+    - rahul@example.com
+
