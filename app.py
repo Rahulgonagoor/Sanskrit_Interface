@@ -7,29 +7,29 @@ from sentence_analyzer_with_meaning import clean_and_split, analyze_word
 # ================= Page Config =================
 st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
-# ================= Load Credentials from Streamlit Secrets =================
-# Make sure you added USERNAME and PASSWORD in Streamlit Secrets
+# ================= Load Credentials from Secrets =================
+USERNAME = st.secrets["USERNAME"]
+PASSWORD = st.secrets["PASSWORD"]
+
 credentials = {
     "usernames": {
-        st.secrets["USERNAME"]: {
-            "email": st.secrets["USERNAME"] + "@example.com",
-            "name": st.secrets["USERNAME"].capitalize(),
-            "password": st.secrets["PASSWORD"]  # Can be hashed later
+        USERNAME: {
+            "email": f"{USERNAME}@example.com",
+            "name": USERNAME,
+            "password": PASSWORD,  # plaintext for now; can hash later
         }
     }
 }
 
-# Cookie settings
 cookie_name = "sanskrit_analyzer"
-cookie_key = "random_key_12345"  # Change to a random secret string
-cookie_expiry_days = 30
+cookie_key = "random_secret_key"
+cookie_expiry = 30
 
-# ================= Init Authenticator =================
 authenticator = stauth.Authenticate(
     credentials,
     cookie_name,
     cookie_key,
-    cookie_expiry_days
+    cookie_expiry,
 )
 
 # ================= Login =================
@@ -44,7 +44,7 @@ elif authentication_status:
     authenticator.logout("Logout", "sidebar")
     st.success(f"✅ Welcome {name or ''}!")
 
-    # ================= Helper to load image =================
+    # ================= Helper to load image as base64 =================
     def get_base64_image(image_path: Path) -> str:
         try:
             with open(image_path, "rb") as img_file:
@@ -52,12 +52,11 @@ elif authentication_status:
         except FileNotFoundError:
             return ""
 
-    # Path to assets / logo
+    # ================= Load logo =================
     assets_path = Path(__file__).parent / "assets"
     logo_path = assets_path / "logo.png"
     chip_b64 = get_base64_image(logo_path)
 
-    # ===== Display Logo =====
     if chip_b64:
         st.markdown(
             f"""
@@ -68,13 +67,13 @@ elif authentication_status:
             unsafe_allow_html=True
         )
 
-    # ===== Title and description =====
+    # ================= Title and description =================
     st.title("🧠 Sanskrit Sentence Analyzer with Meanings")
     st.markdown(
         "Enter a Sanskrit sentence in **Devanagari script**, and view noun/verb analysis with kāraka & meaning details."
     )
 
-    # ===== Input field =====
+    # ================= Input field =================
     sentence = st.text_input("🔠 Enter Sanskrit sentence (Devanagari):")
 
     if sentence:
@@ -90,23 +89,23 @@ elif authentication_status:
 
             with st.expander(f"🔍 {result['word']} — {result['type']}"):
                 if result["type"] == "नामपद (Noun)":
-                    st.write(f"**नामपद**: {result['naamapada']}")
-                    st.write(f"**लिङ्गः**: {result['linga']}")
-                    st.write(f"**विभक्तिः**: {result['vibhakti']}")
-                    st.write(f"**वचनम्**: {result['vachana']}")
-                    st.write(f"**कारकः**: {result['karaka']}")
+                    st.write(f"**नामपद**: {result.get('naamapada', '-')}")
+                    st.write(f"**लिङ्गः**: {result.get('linga', '-')}")
+                    st.write(f"**विभक्तिः**: {result.get('vibhakti', '-')}")
+                    st.write(f"**वचनम्**: {result.get('vachana', '-')}")
+                    st.write(f"**कारकः**: {result.get('karaka', '-')}")
                     if result.get("artha"):
                         st.write(f"**अर्थः**: {result['artha']}")
                     if result.get("apadana_sutra"):
                         st.info(f"📜 **सूत्रम्**: {result['apadana_sutra']}")
 
                 elif result["type"] == "धातु (Verb)":
-                    st.write(f"**धातुः**: {result['dhatu']}")
-                    st.write(f"**अर्थः**: {result['arthah']}")
-                    st.write(f"**लकारः**: {result['lakaara']}")
-                    st.write(f"**पुरुषः**: {result['purusha']}")
-                    st.write(f"**वचनम्**: {result['vachana']}")
-                    st.write(f"**गणः**: {result['ganah']}")
+                    st.write(f"**धातुः**: {result.get('dhatu', '-')}")
+                    st.write(f"**अर्थः**: {result.get('arthah', '-')}")
+                    st.write(f"**लकारः**: {result.get('lakaara', '-')}")
+                    st.write(f"**पुरुषः**: {result.get('purusha', '-')}")
+                    st.write(f"**वचनम्**: {result.get('vachana', '-')}")
+                    st.write(f"**गणः**: {result.get('ganah', '-')}")
                     if result.get("karaka_sutra"):
                         st.info(f"📜 **Kāraka Sūtra**: {result['karaka_sutra']}")
 
