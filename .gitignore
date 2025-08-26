@@ -27,5 +27,3 @@ Thumbs.db
 *.swo
 
 # Sensitive data / credentials
-user.yml
-users.yaml
