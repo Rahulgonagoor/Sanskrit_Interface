@@ -12,13 +12,14 @@ st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
 # ================= Load Config (supports user.yml OR users.yaml) ==============
 config = None
+repo_root = Path(__file__).parent
+
 for fname in ("user.yml", "users.yaml"):
-    try:
-        with open(fname, "r", encoding="utf-8") as f:
+    user_file = repo_root / fname
+    if user_file.exists():
+        with open(user_file, "r", encoding="utf-8") as f:
             config = yaml.load(f, Loader=SafeLoader)
             break
-    except FileNotFoundError:
-        continue
 
 if not config:
     st.error("⚠️ Could not find `user.yml` or `users.yaml` in the project root.")
@@ -32,23 +33,22 @@ cookie_expiry = cookie_cfg.get("expiry_days", 30)
 
 # ================= Init Authenticator ========================================
 authenticator = stauth.Authenticate(
-    config["credentials"],
-    cookie_name,
-    cookie_key,
-    cookie_expiry,
+    credentials=config["credentials"],
+    cookie_name=cookie_name,
+    cookie_key=cookie_key,
+    cookie_expiry_days=cookie_expiry
 )
 
-# ================= Login (compatible with multiple versions) ==================
-# Try old signature (returns tuple); if that fails, fall back to session_state.
+# ================= Login ======================================================
 name = None
 authentication_status = None
 username = None
 
 try:
-    # Old API: login(form_name, location)
-    name, authentication_status, username = authenticator.login("Login",location= "main")
+    # Old API: returns tuple
+    name, authentication_status, username = authenticator.login("Login", location="main")
 except TypeError:
-    # Newer API: login(location="main"), values in st.session_state
+    # New API: use session_state
     authenticator.login(location="main")
     name = st.session_state.get("name")
     authentication_status = st.session_state.get("authentication_status")
@@ -75,7 +75,7 @@ elif authentication_status:
             return ""
 
     # Path to assets / logo
-    assets_path = Path(__file__).parent / "assets"
+    assets_path = repo_root / "assets"
     logo_path = assets_path / "logo.png"
     chip_b64 = get_base64_image(logo_path)
 
@@ -142,4 +142,3 @@ elif authentication_status:
                     for key, value in meanings.items():
                         with st.expander(f"{key} Meaning"):
                             st.write(value)
-
