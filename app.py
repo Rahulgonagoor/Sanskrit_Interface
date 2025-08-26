@@ -7,30 +7,20 @@ import streamlit_authenticator as stauth
 
 from sentence_analyzer_with_meaning import clean_and_split, analyze_word
 
-# ================= Page Config (must be first Streamlit call) =================
+# ================= Page Config =================
 st.set_page_config(page_title="Sanskrit Sentence Analyzer", layout="wide")
 
-# ================= Load Config (supports user.yml OR users.yaml) ==============
-config = None
-for fname in ("user.yml", "users.yaml"):
-    try:
-        with open(fname, "r", encoding="utf-8") as f:
-            config = yaml.load(f, Loader=SafeLoader)
-            break
-    except FileNotFoundError:
-        continue
+# ================= Load user.yml =================
+with open("user.yml", "r", encoding="utf-8") as f:
+    config = yaml.load(f, Loader=SafeLoader)
 
-if not config:
-    st.error("⚠️ Could not find `user.yml` or `users.yaml` in the project root.")
-    st.stop()
-
-# Provide safe defaults if cookie block missing
+# Safe defaults for cookie
 cookie_cfg = config.get("cookie", {})
 cookie_name = cookie_cfg.get("name", "sanskrit_cookie")
 cookie_key = cookie_cfg.get("key", "random_key")
 cookie_expiry = cookie_cfg.get("expiry_days", 30)
 
-# ================= Init Authenticator ========================================
+# ================= Init Authenticator =================
 authenticator = stauth.Authenticate(
     config["credentials"],
     cookie_name,
@@ -38,35 +28,33 @@ authenticator = stauth.Authenticate(
     cookie_expiry,
 )
 
-# ================= Login (compatible with multiple versions) ==================
-# Try old signature (returns tuple); if that fails, fall back to session_state.
+# ================= Login =================
+# Use try/except to handle version differences
 name = None
 authentication_status = None
 username = None
 
 try:
-    # Old API: login(form_name, location)
-    name, authentication_status, username = authenticator.login("Login",location= "main")
+    # Old API: returns tuple
+    name, authentication_status, username = authenticator.login("Login", location="main")
 except TypeError:
-    # Newer API: login(location="main"), values in st.session_state
+    # New API: login only updates st.session_state
     authenticator.login(location="main")
     name = st.session_state.get("name")
     authentication_status = st.session_state.get("authentication_status")
     username = st.session_state.get("username")
 
-# ================= Auth Flow ==================================================
+# ================= Authentication Flow =================
 if authentication_status is False:
     st.error("❌ Username/Password is incorrect")
-
 elif authentication_status is None:
     st.warning("⚠️ Please enter your username and password")
-
 elif authentication_status:
     # Logged in
     authenticator.logout("Logout", "sidebar")
     st.success(f"✅ Welcome {name or ''}!")
 
-    # ==== Helper to load image as base64 ====
+    # ===== Helper to load image as base64 =====
     def get_base64_image(image_path: Path) -> str:
         try:
             with open(image_path, "rb") as img_file:
@@ -74,12 +62,11 @@ elif authentication_status:
         except FileNotFoundError:
             return ""
 
-    # Path to assets / logo
+    # ===== Logo =====
     assets_path = Path(__file__).parent / "assets"
     logo_path = assets_path / "logo.png"
     chip_b64 = get_base64_image(logo_path)
 
-    # ===== Static Logo (only if found) =====
     if chip_b64:
         st.markdown(
             f"""
@@ -90,13 +77,13 @@ elif authentication_status:
             unsafe_allow_html=True
         )
 
-    # ===== Title and description =====
+    # ===== Title =====
     st.title("🧠 Sanskrit Sentence Analyzer with Meanings")
     st.markdown(
         "Enter a Sanskrit sentence in **Devanagari script**, and view noun/verb analysis with kāraka & meaning details."
     )
 
-    # ===== Input field =====
+    # ===== Input =====
     sentence = st.text_input("🔠 Enter Sanskrit sentence (Devanagari):")
 
     if sentence:
@@ -142,4 +129,3 @@ elif authentication_status:
                     for key, value in meanings.items():
                         with st.expander(f"{key} Meaning"):
                             st.write(value)
-
